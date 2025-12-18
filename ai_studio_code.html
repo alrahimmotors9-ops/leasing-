@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al Rahim Motors - Auto Loan Calculator</title>
+    <style>
+        :root {
+            --primary-color: #b71c1c; /* Al Rahim Motors Red */
+            --text-color: #333;
+            --bg-color: #f9f9f9;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--primary-color);
+        }
+
+        /* Header Branding */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .brand-name {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .date-display {
+            font-weight: bold;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Input Section */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: #fff0f0;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #ffcdcd;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+
+        .control-group input, .control-group select {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        .control-group input:focus, .control-group select:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* KIBOR Live Banner */
+        .kibor-banner {
+            background: linear-gradient(to right, #333, #555);
+            color: #fff;
+            padding: 10px 15px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 25px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kibor-badge {
+            background: #ffcc00;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-left: 10px;
+            font-size: 11px;
+        }
+
+        /* Tables */
+        h2 {
+            text-align: center;
+            text-decoration: underline;
+            font-size: 22px;
+            margin-bottom: 25px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+        }
+
+        /* Specific Styles */
+        .highlight-red {
+            background-color: #ff8a80;
+            font-weight: bold;
+        }
+
+        .thick-border {
+            border: 2px solid #000;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+        
+        /* Dynamic Rate Display */
+        .rate-box {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        .disclaimer {
+            font-size: 11px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.5;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="brand-name">Al Rahim Motors</div>
+        <div class="date-display" id="currentDate"></div>
+    </div>
+
+    <!-- Live Rate Banner -->
+    <div class="kibor-banner">
+        <span>
+            DAILY KIBOR (1-Year Offer): <span id="kiborVal" style="color:#ffcc00;"></span>% 
+            <span style="margin: 0 10px;">|</span> 
+            Bank Spread: 3.00%
+        </span>
+        <span class="kibor-badge">AUTOMATICALLY UPDATED</span>
+    </div>
+
+    <!-- User Input Controls -->
+    <div class="controls">
+        <div class="control-group">
+            <label>Vehicle Price (PKR)</label>
+            <input type="number" id="vehiclePrice" value="2590000" oninput="calculateLoan()">
+        </div>
+        <div class="control-group">
+            <label>Tenure (Years)</label>
+            <select id="tenureYears" onchange="calculateLoan()">
+                <option value="1">1 Year</option>
+                <option value="2">2 Years</option>
+                <option value="3" selected>3 Years</option>
+                <option value="4">4 Years</option>
+                <option value="5">5 Years</option>
+                <option value="6">6 Years</option>
+                <option value="7">7 Years</option>
+            </select>
+        </div>
+    </div>
+
+    <h2>Tentative Terms for Al Rahim Motors Auto Loan</h2>
+
+    <!-- Summary Table -->
+    <table class="thick-border">
+        <tr>
+            <td class="bold">Vehicle Price</td>
+            <td class="text-right highlight-red" id="dispPrice">0</td>
+        </tr>
+        <tr>
+            <td class="bold">Down Payment/Margin (30%)</td>
+            <td class="text-right" id="dispDownPayment">0</td>
+        </tr>
+        <tr>
+            <td class="bold">Al Rahim's Participation (Loan Amount)</td>
+            <td class="text-right" id="dispLoanAmount">0</td>
+        </tr>
+        <tr>
+            <td class="bold">Tenure (Months)</td>
+            <td class="text-right highlight-red" id="dispMonths">36</td>
+        </tr>
+        <tr>
+            <td class="bold">Insurance Premium (1.50%)</td>
+            <td class="text-right highlight-red" id="dispInsurance">0</td>
+        </tr>
+        <tr style="background-color: #ffebeb;">
+            <td class="bold" style="border: 2px solid black; color: var(--primary-color);">
+                Markup Rate (Variable) <br> 
+                <span style="font-size:11px; font-weight:normal; color:#333;">(KIBOR <span id="kiborSmall"></span>% + 3%)</span>
+            </td>
+            <td class="text-right" style="font-weight:bold; font-size:18px; border: 2px solid black;" id="dispInstallmentRow">
+                <span id="totalRateDisp" class="rate-box"></span>
+                <br>
+                <span style="color:black; font-size:14px;">Monthly: </span> <span id="dispInstallment">0</span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Initial Deposit Table -->
+    <table class="thick-border">
+        <tr>
+            <td>Down Payment/Margin (Rs.)</td>
+            <td class="text-right" id="breakDownPayment">0</td>
+        </tr>
+        <tr>
+            <td>Processing charges</td>
+            <td class="text-right">12,000</td>
+        </tr>
+        <tr>
+            <td>16% FED on processing Charges</td>
+            <td class="text-right">1,920</td>
+        </tr>
+        <tr>
+            <td>RSD, MD, and Terrorism Cover</td>
+            <td class="text-right">1,000</td>
+        </tr>
+        <tr>
+            <td>First year's insurance premium</td>
+            <td class="text-right" id="breakInsurance">0</td>
+        </tr>
+        <tr>
+            <td>Registration Charges (At cost Approx)</td>
+            <td class="text-right highlight-red">35,000</td>
+        </tr>
+        <tr>
+            <td>W H T (Filer / Non Filer)</td>
+            <td class="text-right highlight-red">15,000</td>
+        </tr>
+        <tr style="border-top: 2px solid black; background: #eee;">
+            <td class="bold">Total Down Payment (Upfront)</td>
+            <td class="text-right bold" style="font-size:16px;" id="dispTotalUpfront">0</td>
+        </tr>
+    </table>
+
+    <!-- Yearly Schedule -->
+    <table class="thick-border">
+        <thead>
+            <tr style="background: #333; color: white;">
+                <th class="text-center">Year</th>
+                <th class="text-center">No. of Installments</th>
+                <th class="text-center">Monthly Rental (Rs)</th>
+                <th class="text-center">Monthly Insurance (Rs)</th>
+                <th class="text-center">Net Payable (Rs)</th>
+            </tr>
+        </thead>
+        <tbody id="scheduleBody">
+            <!-- JS Generated Rows -->
+        </tbody>
+    </table>
+
+    <div class="disclaimer">
+        I/We have understood that these quoted terms are tentative and subject to Prudential Regulations of State Bank of Pakistan. 
+        Al Rahim Motors offers Variable markup rates. In case of Variable markup rates, the installment will be revised on loan anniversary based on prevailing KIBOR rate.
+        <br>
+        <strong>Note:</strong> The calculation is based on Daily KIBOR (<span id="disclaimKibor"></span>%) + 3.00%.
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // DYNAMIC CONFIGURATION
+    // ============================================
+    
+    // As per State Bank of Pakistan (SBP) Dec 18, 2025:
+    // 1-Year KIBOR (Offer) is approximately 10.97%
+    const KIBOR_TODAY = 10.97; 
+    
+    const BANK_SPREAD = 3.00;  // Fixed Spread
+    
+    // Fixed Fees
+    const FEES = {
+        processing: 12000,
+        fed: 1920,
+        rsd: 1000,
+        reg: 35000,
+        wht: 15000
+    };
+    
+    const INSURANCE_RATE = 0.015; // 1.5%
+
+    // Helper to format numbers with commas
+    function formatCurrency(num) {
+        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function calculateLoan() {
+        // 1. Get User Inputs
+        let price = parseFloat(document.getElementById('vehiclePrice').value) || 0;
+        let years = parseInt(document.getElementById('tenureYears').value);
+        let months = years * 12;
+
+        // 2. Main Calculations
+        let downPayment = price * 0.30; // 30%
+        let loanAmount = price - downPayment;
+        
+        // Calculate Rates
+        let totalRatePercent = KIBOR_TODAY + BANK_SPREAD;
+        let monthlyRate = (totalRatePercent / 100) / 12;
+
+        // PMT Formula for Monthly Rental
+        // Rental = Loan * rate / (1 - (1+rate)^-months)
+        let pmt = 0;
+        if (monthlyRate > 0) {
+            pmt = loanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -months));
+        }
+
+        let firstYearInsurance = price * INSURANCE_RATE;
+
+        // 3. Update DOM Elements
+        
+        // Display Current Rates
+        document.getElementById('kiborVal').innerText = KIBOR_TODAY.toFixed(2);
+        document.getElementById('kiborSmall').innerText = KIBOR_TODAY.toFixed(2);
+        document.getElementById('disclaimKibor').innerText = KIBOR_TODAY.toFixed(2);
+        document.getElementById('totalRateDisp').innerText = totalRatePercent.toFixed(2) + "%";
+
+        // Display Summary Top Table
+        document.getElementById('dispPrice').innerText = formatCurrency(price);
+        document.getElementById('dispDownPayment').innerText = formatCurrency(downPayment);
+        document.getElementById('dispLoanAmount').innerText = formatCurrency(loanAmount);
+        document.getElementById('dispMonths').innerText = months;
+        document.getElementById('dispInsurance').innerText = formatCurrency(firstYearInsurance);
+        document.getElementById('dispInstallment').innerText = formatCurrency(pmt);
+
+        // Display Breakdown Table
+        document.getElementById('breakDownPayment').innerText = formatCurrency(downPayment);
+        document.getElementById('breakInsurance').innerText = formatCurrency(firstYearInsurance);
+        
+        let totalUpfront = downPayment + FEES.processing + FEES.fed + FEES.rsd + firstYearInsurance + FEES.reg + FEES.wht;
+        document.getElementById('dispTotalUpfront').innerText = formatCurrency(totalUpfront);
+
+        // 4. Generate Yearly Schedule
+        let tbody = document.getElementById('scheduleBody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        let currentCarValue = price;
+
+        for (let i = 1; i <= years; i++) {
+            // Insurance calculation:
+            // Year 1: 1.5% of Value
+            // Year 2+: Value depreciates by 10% each year for insurance calculation
+            
+            let annualIns = currentCarValue * INSURANCE_RATE;
+            let monthlyIns = annualIns / 12;
+            let netPayable = pmt + monthlyIns;
+
+            let rowHtml = `<tr>
+                <td class="text-center bold">Year ${i}</td>
+                <td class="text-center">12</td>
+                <td class="text-right">${formatCurrency(pmt)}</td>
+                <td class="text-right">${formatCurrency(monthlyIns)}</td>
+                <td class="text-right highlight-red">${formatCurrency(netPayable)}</td>
+            </tr>`;
+            
+            tbody.innerHTML += rowHtml;
+
+            // Depreciate car value for next year loop
+            currentCarValue = currentCarValue * 0.90; 
+        }
+    }
+
+    // Initialize Date and Calculation
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDate').innerText = "Date: " + new Date().toLocaleDateString("en-US", dateOptions);
+    
+    // Run once on load
+    window.onload = calculateLoan;
+
+</script>
+
+</body>
+</html>
